@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Demo DSS</title>
+
+  <script src="/static/jquery-3.3.1.slim.min.js"></script>
+
+  <link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
+  <script src="/static/bootstrap/js/bootstrap.min.js"></script>
+
+  <link rel="stylesheet" href="/static/select2/dist/css/select2.min.css">
+  <script src="/static/select2/dist/js/select2.min.js"></script>
+
+  <script src="/static/holder.min.js"></script>
+  <script>
+    Holder.addTheme('thumb', {
+      bg: '#55595c',
+      fg: '#eceeef',
+      text: 'Thumbnail'
+    });
+  </script>
+
+  <script>
+    $(document).ready(function ($) {
+      $.get('/api/url', function (data) {
+        window.urls = data.urls
+        $('#input-urls').select2({
+          data: data.urls
+        }).on('select2:select', function (e) {
+          var data = e.params.data;
+          console.log(data);
+
+          $('#url_frame').attr('src', data.text)
+          get_predict()
+        });
+      });
+
+      $.get('/api/models', function (data) {
+        window.urls = data.urls
+        $('#input-models').select2({
+          data: data.models
+        }).on('select2:select', function (e) {
+          var model = e.params.data;
+          get_predict()
+        });
+      });
+
+      function get_predict() {
+        var model = $('#input-models').val()
+        var id = $('#input-urls').val()
+
+        if (model && id) {
+          $.get('/api/predict/' + model + '/' + id, function (data) {
+            $('#label').html(data.data.pred)
+            $('#predict_label').show()
+            $('#feature_raw').show()
+
+            if (data.data.pred == 1) {
+              $('#predict_label').css('color', 'green')
+            } else {
+              $('#predict_label').css('color', 'red')
+            }
+            $('#feature_raw pre').html(JSON.stringify(data.data, null, 4))
+          })
+        }
+      }
+
+    })
+  </script>
+</head>
+
+<body>
+  <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm">
+    <h5 class="my-0 mr-md-auto font-weight-normal">News Popular Prediction</h5>
+    <nav class="my-2 my-md-0 mr-md-3">
+      <!-- <a class="p-2 text-dark" href="#">Features</a> -->
+    </nav>
+    <!-- <a class="btn btn-outline-primary" href="#">Sign up</a> -->
+  </div>
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-7">
+        <div class="url-browser">
+          <div class="form-group">
+            <label for="">URLs</label>
+            <select class="form-control" name="" id="input-urls">
+              <option value=""></option>
+            </select>
+          </div>
+        </div>
+
+        <div class="iframe">
+          <iframe src="javascript:;" id="url_frame" frameborder="0" style="width:100%; height: 800px"></iframe>
+        </div>
+
+      </div>
+      <div class="col-5">
+        <div class="form-group">
+          <label for="">Models</label>
+          <select class="form-control" name="" id="input-models">
+            <option value=""></option>
+          </select>
+        </div>
+
+        <div id="predict_label" style="display:none; font-size: 2em; font-weight: 700">Popular: <span id="label"></span></div>
+        <div id="feature_raw" style="display:none;">
+          Features:
+          <pre></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+</html>
